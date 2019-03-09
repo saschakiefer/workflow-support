@@ -65,6 +65,7 @@ function helpOutput() {
     process.exit(0);
 }
 
+// Input Check
 function checkOptions() {
     logger.info('===== Checking Input Parameters =====');
     const optionDefinitions = [{
