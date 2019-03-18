@@ -144,7 +144,7 @@ function processFootNotes() {
         // logger.info('Processing text reference: ' + x + ' ==> ' + target);
 
         var footnoteString = x.substring(5, x.length - 2).trim();
-        footnoteString = '<a name="fn' + counter + '">[' + counter + ']</a>: ' + footnoteString + "\n";
+        footnoteString = '<a name="fn' + counter + '">[' + counter + ']</a>: ' + footnoteString + "\n\n";
         // logger.info('Footnote: ' + footnoteString);
 
         footnoteList = footnoteList + footnoteString;
