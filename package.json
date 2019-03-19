@@ -12,8 +12,10 @@
     "dependencies": {
         "command-line-args": "^5.0.2",
         "command-line-usage": "^5.0.5",
+        "mermaid.cli": "^0.5.1",
         "remark": "^10.0.1",
         "remark-toc": "^5.1.1",
+        "shelljs": "^0.8.3",
         "winston": "^3.2.1"
     },
     "devDependencies": {},

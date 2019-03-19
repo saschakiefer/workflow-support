@@ -2,10 +2,12 @@
 
 const commandLineArgs = require('command-line-args');
 const winston = require('winston');
+const path = require('path');
+const fs = require('fs');
+const shell = require('shelljs');
 
-var remark = require('remark');
-var toc = require('remark-toc');
-var fs = require('fs');
+const _mermaidPath = '_mermaid_diagrams';
+const _mermaidTempFile = '~tempInput.txt';
 
 var localFile = '';
 
@@ -29,14 +31,15 @@ const logger = winston.createLogger({
 
 var inputFile = '';
 var outputFile = '';
+var mermaidPath = '';
 
 // "Man Pages"
 function helpOutput() {
     const commandLineUsage = require('command-line-usage');
 
     const sections = [{
-            header: 'Scrivener Post Processing Script',
-            content: 'Executes some post processing scripts after Scrivener compilation (e.g. TOC generation, Footnote processing...)'
+            header: 'Footnote Post Processing Script',
+            content: 'post processing script, that turns a custom inline footnote string with the format {{fn: }} into a numbered footnote list, that is also compatible with git.'
         },
         {
             header: 'Options',
@@ -109,24 +112,11 @@ function checkOptions() {
 
     inputFile = options['input-file'];
     outputFile = options['output-file'];
+    mermaidPath = path.join(path.dirname(outputFile), _mermaidPath);
 
     logger.info('Reading from ' + inputFile);
     logger.info('Writing to ' + outputFile);
-}
-
-
-function createToc() {
-    logger.info();
-    logger.info('===== Creating ToC =====');
-    logger.info('Creating ToC')
-    remark()
-        .use(toc, {
-            tight: true
-        })
-        .process(localFile, function (err, file) {
-            if (err) logger.error(err.message);
-            localFile = file;
-        });
+    logger.info('Mermaid diagram path: ' + mermaidPath);
 }
 
 function processFootNotes() {
@@ -134,92 +124,116 @@ function processFootNotes() {
     logger.info('===== Transforming Foot Notes =====');
     var str = localFile;
 
-    // Processing List at the End of the file first
-    // So in the next step they get not caught by the links inside text processing
-    var regex = /\[\^fn\d*\]: /gm;
+    var footnoteList = "";
+    var counter = 1;
+
+
+    // Find inline Footnotes in the format 
+    // ((fn: <content>))
+    var regex = /\{\{fn:.*\}\}/gm;
     var res = str.replace(regex, function (x) {
-        var target = '<a name="' +
-            x.substring(2, x.lastIndexOf(']')) +
-            '">\[' +
-            x.substring(4, x.lastIndexOf(']')) +
-            '\]</a>: ';
-        logger.info('Processing footnote reference: ' + x + ' ==> ' + target);
+        var target = '<sup>[' + counter + '](#fn' + counter + ')</sup>';
+        // logger.info('Processing text reference: ' + x + ' ==> ' + target);
+
+        var footnoteString = x.substring(5, x.length - 2).trim();
+        footnoteString = '<a name="fn' + counter + '">[' + counter + ']</a>: ' + footnoteString + "\n\n";
+        // logger.info('Footnote: ' + footnoteString);
+
+        footnoteList = footnoteList + footnoteString;
+        counter++;
         return target;
     });
 
-    str = res;
-
-    // Processing links inside text
-    regex = /\[\^fn\d*\]/gm;
-    // <sup>[19](#fn_corsauth)</sup>
-
-    var res = str.replace(regex, function (x) {
-        var target = '<sup>[' +
-            x.substring(4, x.lastIndexOf(']')) +
-            '](#' +
-            x.substring(2, x.lastIndexOf(']')) +
-            ')</sup>';
-        logger.info('Processing text reference: ' + x + ' ==> ' + target);
-        return target;
-    });
-
-    localFile = res;
-}
-
-function fixImageURL() {
-    logger.info();
-    logger.info('===== Fixing Image References =====');
-    var fileAnchorArray = [];
-    var str = localFile;
-    var regex = /!\[\]\[.*\]/gm;
-    // ![][ImageName]
-
-    var res = str.replace(regex, function (x) {
-        var anchorName = x;
-
-        anchorName = anchorName.replace('![][', '');
-        anchorName = anchorName.substr(0, anchorName.length - 1);
-        logger.info('Processing [' + anchorName + ']');
-
-        var fileAnchorRegex = new RegExp('\\[' + anchorName + '\\]:\\s.*\\n', 'gm');
-        var anchorArray = str.match(fileAnchorRegex);
-
-        if (anchorArray === null) {
-            logger.error('No Image Anchor found for [' + anchorName + '] -> Exiting');
-            process.exit(4);
-        }
-
-        if (anchorArray.length != 1) {
-            logger.error('Found multiple matches for the Image Anchor [' + anchorName + '] -> Exiting');
-            process.exit(4);
-        }
-
-        var anchorDefinition = anchorArray[0];
-        logger.info("Extracting data from: " + anchorDefinition.substr(0, anchorDefinition.length - 1)); // Removing the trailing \n
-
-        var fileName = anchorDefinition.replace('[' + anchorName + ']: ', '');
-        fileName = fileName.substr(0, fileName.indexOf(' '));
-
-        logger.info('Image name: ' + fileName);
-
-        var target = '![](' +
-            fileName +
-            ')';
-        logger.info('Transforming Reference: ' + x + ' ==> ' + target);
-
-        fileAnchorArray.push(anchorDefinition);
-        return target;
-    });
-
-    logger.info();
-    logger.info('===== Removing File Anchors from File =====');
-
-    for (var i = 0; i < fileAnchorArray.length; i++) {
-        logger.info("Removing: " + fileAnchorArray[i].substr(0, fileAnchorArray[i].length - 1)); // Removing the trailing \n
-        res = res.replace(fileAnchorArray[i], '');
+    if (counter > 0) {
+        counter = counter - 1
     }
 
-    localFile = res;
+    logger.info(counter + ' Footnote(s) processed');
+    footnoteList = '\n\n---\n\n' + footnoteList;
+    localFile = res + footnoteList;
+}
+
+function processMermaid() {
+    logger.info();
+    logger.info('===== Processing Mermaid Diagrams =====');
+    var str = localFile;
+
+    var footnoteList = "";
+    var counter = 1;
+
+    // fenced mermaid blocks
+    var regex = /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm;
+    var res = str.replace(regex, function (x) {
+        var imagePath = '';
+        var imagePathRel = ''
+
+        // Get Diagram Name
+        var imageRegex = /(%%.*diagramName:).*([\n])/gm;
+        var imageNameArray = x.match(imageRegex);
+        var imageName = '';
+
+        if (imageNameArray == null || imageNameArray.length < 1) {
+            logger.warn("Code Block does not contain a diagram name [%% diagramName:<file_name>]. Block will be ignored.");
+            return x;
+        }
+
+        imageName = imageNameArray[0].trim();
+        imageNameArray = imageName.split(':');
+
+        if (imageNameArray.length != 2) {
+            logger.warn("Code Block does not contain a valid diagram name [%% diagramName:<file_name>]. Block will be ignored.");
+            return x;
+        }
+
+        // Assemble file names and paths
+        imageName = imageNameArray[1] + '.png';
+        imagePathRel = path.join('.', _mermaidPath, imageName);
+        imagePath = path.join(mermaidPath, imageName);
+
+        // Create Subdir if it does not exist
+        if (!fs.existsSync(mermaidPath)) {
+            fs.mkdirSync(mermaidPath);
+            logger.info(mermaidPath + ' created');
+        }
+
+
+        // Cut fence block from diagram content
+        var contentArray = x.split('\n');
+        contentArray.pop(); // remove trailing ````
+        contentArray.splice(0, 1); // remove leading ```mermaid
+
+        // Create temp input file
+        try {
+            fs.writeFileSync(path.join(mermaidPath, _mermaidTempFile), contentArray.join('\n'));
+        } catch (error) {
+            logger.warn(error);
+            return x;
+        }
+
+        // console.log(__dirname + '/../node_modules/.bin/mmdc -i ' + path.join(mermaidPath, _mermaidTempFile) + ' -o ' + imagePath);
+        shell.exec(__dirname + '/../node_modules/.bin/mmdc -w 2048 -H 1536 -i ' + path.join(mermaidPath, _mermaidTempFile) + ' -o ' + imagePath);
+
+        counter++;
+        logger.info("Diagram created at: " + imagePath);
+        return '![' + imageName + '](' + imagePathRel + ')';
+    });
+
+    // Delete temp file
+    try {
+        fs.unlinkSync(path.join(mermaidPath, _mermaidTempFile));
+        logger.info('Successfully deleted ' + path.join(mermaidPath, _mermaidTempFile));
+    } catch (err) {
+        logger.warn('Could not delete ' + path.join(mermaidPath, _mermaidTempFile) + '. Please delete manually.')
+    }
+
+    // Correct Counter
+    if (counter > 0) {
+        counter = counter - 1
+    }
+
+    logger.info(counter + ' Diagram(s) processed');
+    footnoteList = '\n\n---\n\n' + footnoteList;
+    localFile = res + footnoteList;
 }
 
 ////// MAIN //////
@@ -229,8 +243,7 @@ checkOptions();
 localFile = fs.readFileSync(inputFile, 'utf8');
 
 processFootNotes();
-fixImageURL();
-createToc();
+processMermaid();
 
 fs.writeFileSync(outputFile, localFile);
 logger.info();
