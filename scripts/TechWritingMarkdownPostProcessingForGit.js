@@ -210,8 +210,11 @@ function processMermaid() {
             return x;
         }
 
-        // console.log(__dirname + '/../node_modules/.bin/mmdc -i ' + path.join(mermaidPath, _mermaidTempFile) + ' -o ' + imagePath);
-        shell.exec(__dirname + '/../node_modules/.bin/mmdc -w 2048 -H 1536 -i ' + path.join(mermaidPath, _mermaidTempFile) + ' -o ' + imagePath);
+        // Execute mermaid CLI
+        shell.exec(__dirname + '/../node_modules/.bin/mmdc -w 2048 -H 1536 -c ' +
+            path.join(__dirname, 'mermaidConfig.json') +
+            ' -i ' + path.join(mermaidPath, _mermaidTempFile) +
+            ' -o ' + imagePath);
 
         counter++;
         logger.info("Diagram created at: " + imagePath);
