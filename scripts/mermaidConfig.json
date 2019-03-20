@@ -4,6 +4,5 @@
         "height": 40,
         "actorMargin": 100,
         "mirrorActors": false
-    },
-    "theme": "light"
+    }
 }
