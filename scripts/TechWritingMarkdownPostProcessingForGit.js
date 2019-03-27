@@ -10,6 +10,7 @@ const _mermaidPath = '_mermaid_diagrams';
 const _mermaidTempFile = '~tempInput.txt';
 
 var localFile = '';
+var skipDiagrams = false;
 
 // Logger
 const myFormat = winston.format.printf(({
@@ -35,31 +36,34 @@ var mermaidPath = '';
 
 // "Man Pages"
 function helpOutput() {
+    console.log("help");
     const commandLineUsage = require('command-line-usage');
 
     const sections = [{
             header: 'Footnote Post Processing Script',
-            content: 'post processing script, that turns a custom inline footnote string with the format {{fn: }} into a numbered footnote list, that is also compatible with git.'
+            content: 'post processing script, that turns a custom inline footnote string with the format ((fn: )) (where ( are curley braces)) into a numbered footnote list, that is also compatible with git. It also parses the mermaid diagrams inside the document to pictures'
         },
         {
             header: 'Options',
             optionList: [{
-                    name: 'input-file',
-                    alias: 'i',
-                    typeLabel: '{underline file}',
-                    description: 'File to be processed'
-                }, {
-                    name: 'output-file',
-                    alias: 'o',
-                    typeLabel: '{underline file}',
-                    description: 'Processed file'
-                },
-                {
-                    name: 'help',
-                    alias: 'h',
-                    description: 'Print this usage guide.'
-                }
-            ]
+                name: 'input-file',
+                alias: 'i',
+                typeLabel: '{underline file}',
+                description: 'File to be processed'
+            }, {
+                name: 'output-file',
+                alias: 'o',
+                typeLabel: '{underline file}',
+                description: 'Processed file'
+            }, {
+                name: 'help',
+                alias: 'h',
+                description: 'Print this usage guide.'
+            }, {
+                name: 'no-diagrams',
+                alias: 'n',
+                description: 'Skips the diagram generating for performance optimization. Only existing ones will be used. Other links will point to non existing resources.'
+            }]
         }
     ];
 
@@ -72,21 +76,22 @@ function helpOutput() {
 function checkOptions() {
     logger.info('===== Checking Input Parameters =====');
     const optionDefinitions = [{
-            name: 'input-file',
-            alias: 'i',
-            type: String
-        },
-        {
-            name: 'output-file',
-            alias: 'o',
-            type: String
-        },
-        {
-            name: 'help',
-            alias: 'h',
-            type: Boolean
-        }
-    ]
+        name: 'input-file',
+        alias: 'i',
+        type: String
+    }, {
+        name: 'output-file',
+        alias: 'o',
+        type: String
+    }, {
+        name: 'help',
+        alias: 'h',
+        type: Boolean
+    }, {
+        name: 'no-diagrams',
+        alias: 'n',
+        type: Boolean
+    }]
 
     const options = commandLineArgs(optionDefinitions);
 
@@ -98,6 +103,10 @@ function checkOptions() {
     if (options.help) {
         helpOutput();
         process.exit(0);
+    }
+
+    if (options['no-diagrams']) {
+        skipDiagrams = true;
     }
 
     if (!options['input-file']) {
@@ -190,43 +199,49 @@ function processMermaid() {
         imagePathRel = path.join('.', _mermaidPath, imageName);
         imagePath = path.join(mermaidPath, imageName);
 
-        // Create Subdir if it does not exist
-        if (!fs.existsSync(mermaidPath)) {
-            fs.mkdirSync(mermaidPath);
-            logger.info(mermaidPath + ' created');
+        if (!skipDiagrams) {
+            // Create Subdir if it does not exist
+            if (!fs.existsSync(mermaidPath)) {
+                fs.mkdirSync(mermaidPath);
+                logger.info(mermaidPath + ' created');
+            }
+
+
+            // Cut fence block from diagram content
+            var contentArray = x.split('\n');
+            contentArray.pop(); // remove trailing ````
+            contentArray.splice(0, 1); // remove leading ```mermaid
+
+            // Create temp input file
+            try {
+                fs.writeFileSync(path.join(mermaidPath, _mermaidTempFile), contentArray.join('\n'));
+            } catch (error) {
+                logger.warn(error);
+                return x;
+            }
+
+            // Execute mermaid CLI
+            shell.exec(__dirname + '/../node_modules/.bin/mmdc -w 2048 -H 1536 -c ' +
+                path.join(__dirname, 'mermaidConfig.json') +
+                ' -i ' + path.join(mermaidPath, _mermaidTempFile) +
+                ' -o ' + imagePath);
+
+
+            logger.info("Diagram created at: " + imagePath);
         }
-
-
-        // Cut fence block from diagram content
-        var contentArray = x.split('\n');
-        contentArray.pop(); // remove trailing ````
-        contentArray.splice(0, 1); // remove leading ```mermaid
-
-        // Create temp input file
-        try {
-            fs.writeFileSync(path.join(mermaidPath, _mermaidTempFile), contentArray.join('\n'));
-        } catch (error) {
-            logger.warn(error);
-            return x;
-        }
-
-        // Execute mermaid CLI
-        shell.exec(__dirname + '/../node_modules/.bin/mmdc -w 2048 -H 1536 -c ' +
-            path.join(__dirname, 'mermaidConfig.json') +
-            ' -i ' + path.join(mermaidPath, _mermaidTempFile) +
-            ' -o ' + imagePath);
 
         counter++;
-        logger.info("Diagram created at: " + imagePath);
         return '![' + imageName + '](' + imagePathRel + ')';
     });
 
     // Delete temp file
-    try {
-        fs.unlinkSync(path.join(mermaidPath, _mermaidTempFile));
-        logger.info('Successfully deleted ' + path.join(mermaidPath, _mermaidTempFile));
-    } catch (err) {
-        logger.warn('Could not delete ' + path.join(mermaidPath, _mermaidTempFile) + '. Please delete manually.')
+    if (!skipDiagrams) {
+        try {
+            fs.unlinkSync(path.join(mermaidPath, _mermaidTempFile));
+            logger.info('Successfully deleted ' + path.join(mermaidPath, _mermaidTempFile));
+        } catch (err) {
+            logger.warn('Could not delete ' + path.join(mermaidPath, _mermaidTempFile) + '. Please delete manually.')
+        }
     }
 
     // Correct Counter
