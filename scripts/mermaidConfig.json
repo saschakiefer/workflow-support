@@ -1,8 +1,8 @@
 {
-    "startOnLoad": true,
-    "sequence": {
-        "height": 40,
-        "actorMargin": 100,
-        "mirrorActors": false
-    }
+  "startOnLoad": true,
+  "sequence": {
+    "height": 40,
+    "actorMargin": 100,
+    "mirrorActors": false
+  }
 }

@@ -1,30 +1,30 @@
 {
-    "name": "scrivener-workflow",
-    "version": "1.0.0",
-    "description": "Some Useful Stuff for Scrivener",
-    "main": "echo \"Error: no main script specified\" && exit 1",
-    "directories": {},
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "author": "Sascha Kiefer",
-    "license": "GPL-3.0",
-    "dependencies": {
-        "command-line-args": "^5.0.2",
-        "command-line-usage": "^5.0.5",
-        "mermaid.cli": "^0.5.1",
-        "remark": "^10.0.1",
-        "remark-toc": "^5.1.1",
-        "shelljs": "^0.8.3",
-        "winston": "^3.2.1"
-    },
-    "devDependencies": {},
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/saschakiefer/scrivener-workflow.git"
-    },
-    "bugs": {
-        "url": "https://github.com/saschakiefer/scrivener-workflow/issues"
-    },
-    "homepage": "https://github.com/saschakiefer/scrivener-workflow#readme"
+  "name": "scrivener-workflow",
+  "version": "1.0.0",
+  "description": "Some Useful Stuff for Scrivener",
+  "main": "echo \"Error: no main script specified\" && exit 1",
+  "directories": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sascha Kiefer",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "command-line-args": "^5.0.2",
+    "command-line-usage": "^5.0.5",
+    "mermaid.cli": "^0.5.1",
+    "remark": "^10.0.1",
+    "remark-toc": "^5.1.1",
+    "shelljs": "^0.8.3",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saschakiefer/scrivener-workflow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/saschakiefer/scrivener-workflow/issues"
+  },
+  "homepage": "https://github.com/saschakiefer/scrivener-workflow#readme"
 }
