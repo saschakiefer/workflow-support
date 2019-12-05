@@ -10,7 +10,7 @@
   "author": "Sascha Kiefer",
   "license": "GPL-3.0",
   "dependencies": {
-    "command-line-args": "^5.0.2",
+    "command-line-args": "^5.1.1",
     "command-line-usage": "^5.0.5",
     "mermaid.cli": "^0.5.1",
     "remark": "^10.0.1",
