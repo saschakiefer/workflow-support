@@ -1,0 +1,5 @@
+#!/bin/bash
+cd ~/git/cFLPSecurityConcepts/topicStatus 
+git add .
+git commit -m "Status Update"
+git push
