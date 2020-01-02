@@ -456,6 +456,8 @@ to createNote(theID, theName, theText, theURL, theSource, createdAt, theTag, the
 					set attribute "Height"'s value to 3
 					set attribute "ZettelID"'s value to theID
 				end tell
+			else
+				tell newNote to set attribute "Text"'s value to theText -- Update the text in any case
 			end if
 		end tell
 	end tell
