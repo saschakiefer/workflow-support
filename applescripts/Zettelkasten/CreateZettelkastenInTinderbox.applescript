@@ -24,7 +24,7 @@ set prototypeNameExt to "pExternalSource"
 set keyAttributesStr to "URL;SourceURL;SourceCreated;ZettelID;DTReferences;Authors;Source"
 set keyAttributesStrExt to "URL;SourceURL;SourceCreated"
 
-set mainCategories to {IDXX:"xx Autoren", ID00:"00 Allgemeines", ID01:"01 Technologie", ID02:"02 Spiritualität", ID03:"03 Management", ID04:"Gesundheit"}
+set mainCategories to {IDXX:"xx Autoren", ID00:"00 Allgemeines", ID01:"01 Technologie", ID02:"02 Spiritualität", ID03:"03 Management", ID04:"04 Gesundheit"}
 set catDictionary to current application's NSDictionary's dictionaryWithDictionary:mainCategories
 
 set zettelkastenRecordUUID to "EA459C7B-91B5-4169-B250-C1AD87C92941" -- This is the ID of the Zettelkasten Tinderbox document stored in DevonThink
