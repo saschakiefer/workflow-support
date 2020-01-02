@@ -320,8 +320,10 @@ tell application id "DNtp"
 					tell currentZettel
 						set attribute "Source"'s value to (item 3 of localReference)
 						
-						if (attribute "SourceURL"'s value) is "" then
-							set attribute "SourceURL"'s value to (item 3 of localReference)
+						if (item 1 of localReference) is not "others" then
+							if (attribute "SourceURL"'s value) is "" then
+								set attribute "SourceURL"'s value to (item 3 of localReference)
+							end if
 						end if
 					end tell
 				end tell
@@ -401,6 +403,9 @@ on getReference(rawData)
 		set theReference to trimText(theReference, ")", "end")
 		
 		set theReturnObject to {theType, theReference, theReference}
+	else
+		set theType to "others"
+		set theReturnObject to {theType, rawData, rawData}
 	end if
 	
 	return theReturnObject
