@@ -21,7 +21,7 @@ set containerName to "Prototypes"
 set prototypeAuthor to "pAutor"
 set prototypeName to "pZettel"
 set prototypeNameExt to "pExternalSource"
-set keyAttributesStr to "URL;SourceURL;SourceCreated;ZettelID;DTReferences;Authors;Source"
+set keyAttributesStr to "URL;SourceURL;SourceCreated;ZettelID;DTReferences;Authors;Source;Tags"
 set keyAttributesStrExt to "URL;SourceURL;SourceCreated"
 
 set mainCategories to {IDXX:"xx Autoren", ID00:"00 Allgemeines", ID01:"01 Technologie", ID02:"02 Spiritualität", ID03:"03 Management", ID04:"04 Gesundheit"}
@@ -460,6 +460,7 @@ to createNote(theID, theName, theText, theURL, theSource, createdAt, theTag, the
 					set attribute "Width"'s value to 7
 					set attribute "Height"'s value to 3
 					set attribute "ZettelID"'s value to theID
+					set attribute "Tags"'s value to theTag
 				end tell
 			else
 				tell newNote to set attribute "Text"'s value to theText -- Update the text in any case
