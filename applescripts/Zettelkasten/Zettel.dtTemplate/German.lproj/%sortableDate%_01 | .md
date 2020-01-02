@@ -4,7 +4,7 @@ Referenzen:
 * 
 
 Quelle:
-*
+* 
 
 Autoren:
 * 

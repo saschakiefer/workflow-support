@@ -5,7 +5,7 @@
 -- Optimierungen für später nicht ausgeschlossen
 -- 
 -- Annahmen:
---   Titel des Zettel in DevonThink [ID] # [Titel]
+--   Titel des Zettel in DevonThink [ID] | [Titel]
 --   Jeder Zettel hat in DevonThink genau 1 Tag
 --   Die Zettel sind in Markdown verfasst
 --   Das Trennzeichen für den Metadatenabschnitt ist --- und wird nur ein mal im Text verwendet
@@ -517,7 +517,7 @@ to getNameComponents(title)
 	set oldDelimiters to AppleScript's text item delimiters
 	
 	-- set delimiters to delimiter to be used
-	set AppleScript's text item delimiters to " # "
+	set AppleScript's text item delimiters to " | "
 	
 	-- create the array
 	set theArray to every text item of title
