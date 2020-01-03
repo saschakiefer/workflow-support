@@ -2,13 +2,13 @@
 --================================================================================
 --
 -- Zettelkasten aus den markierten Devon Think Zetteln erzeugen
--- Optimierungen für später nicht ausgeschlossen
+-- Optimierungen f√ºr sp√§ter nicht ausgeschlossen
 -- 
 -- Annahmen:
 --   Titel des Zettel in DevonThink [ID] | [Titel]
 --   Jeder Zettel hat in DevonThink genau 1 Tag
 --   Die Zettel sind in Markdown verfasst
---   Das Trennzeichen für den Metadatenabschnitt ist --- und wird nur ein mal im Text verwendet
+--   Das Trennzeichen f√ºr den Metadatenabschnitt ist --- und wird nur ein mal im Text verwendet
 --================================================================================
 --================================================================================
 use scripting additions
@@ -24,7 +24,7 @@ set prototypeNameExt to "pExternalSource"
 set keyAttributesStr to "URL;SourceURL;SourceCreated;ZettelID;DTReferences;Authors;Source;Tags"
 set keyAttributesStrExt to "URL;SourceURL;SourceCreated"
 
-set mainCategories to {IDXX:"xx Autoren", ID00:"00 Allgemeines", ID01:"01 Technologie", ID02:"02 Spiritualität", ID03:"03 Management", ID04:"04 Gesundheit"}
+set mainCategories to {IDXX:"xx Autoren", ID00:"00 Allgemeines", ID01:"01 Technologie", ID02:"02 Spiritualit√§t", ID03:"03 Management", ID04:"04 Gesundheit"}
 set catDictionary to current application's NSDictionary's dictionaryWithDictionary:mainCategories
 
 set zettelkastenRecordUUID to "EA459C7B-91B5-4169-B250-C1AD87C92941" -- This is the ID of the Zettelkasten Tinderbox document stored in DevonThink
@@ -141,7 +141,7 @@ tell application id "DNtp"
 				set this_tag to tags of this_record
 				set this_tag to item 1 of this_tag
 				
-				-- Inhalt abhängig vom Format auslesen
+				-- Inhalt abh√§ngig vom Format auslesen
 				if (this_type is markdown) or (this_type is txt) then
 					set this_content to the plain text of this_record
 				else if (this_type = formatted note) or (this_type = rtf) or (this_type = rtfd) then
@@ -332,6 +332,8 @@ tell application id "DNtp"
 	end repeat
 end tell
 
+display notification "Zettelkasten erfolgreich angelegt."
+
 --================================================================================
 --================================================================================
 --
@@ -341,7 +343,7 @@ end tell
 --================================================================================
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
--- Prüfen, ob das ein Record ist, der im Zettelkasten bearbeitet werden soll (keine Gruppe und startet nicht mit _)
+-- Pr√ºfen, ob das ein Record ist, der im Zettelkasten bearbeitet werden soll (keine Gruppe und startet nicht mit _)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 on isValidRecord(theRecord)
 	tell application id "DNtp"
@@ -360,7 +362,7 @@ end isValidRecord
 -------------------------------------------------------------------------------------------------------------------------------------------------
 on linkFromNoteToNote(typeName, fromNote, toNote)
 	tell application "Tinderbox 8"
-		if typeName ≠ "" then
+		if typeName ‚â† "" then
 			set strType to typeName
 		else
 			set strType to "*untitled"
@@ -498,17 +500,58 @@ end getCategoryNoteNameByTag
 to createMainCategories()
 	set allKeys to my catDictionary's allKeys()
 	
+	set sortedKeys to {}
 	repeat with theKey in allKeys
+		set sortedKeys to sortedKeys & theKey
+	end repeat
+	set sortedKeys to simpleSort(sortedKeys)
+	
+	set counter to 0
+	repeat with theKey in sortedKeys
+		set counter to counter + 1
+		log counter
 		set catName to getCatByID(theKey as text)
 		tell front document of application "Tinderbox 8"
 			if not (exists note catName) then
+				
+				--if counter is 1 then
 				set newNote to make new note
+				--else
+				--set newNote to make new note at before first note
+				--end if
+				
 				tell newNote to set name to catName
 				tell newNote to set attribute "Width"'s value to 6
 			end if
 		end tell
 	end repeat
 end createMainCategories
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+-- Simple List Sorter
+-------------------------------------------------------------------------------------------------------------------------------------------------
+on simpleSort(my_list)
+	set the index_list to {}
+	set the sorted_list to {}
+	repeat (the number of items in my_list) times
+		set the low_item to ""
+		repeat with i from 1 to (number of items in my_list)
+			if i is not in the index_list then
+				set this_item to item i of my_list as text
+				if the low_item is "" then
+					set the low_item to this_item
+					set the low_item_index to i
+				else if this_item comes before the low_item then
+					set the low_item to this_item
+					set the low_item_index to i
+				end if
+			end if
+		end repeat
+		set the end of sorted_list to the low_item
+		set the end of the index_list to the low_item_index
+	end repeat
+	return the sorted_list
+end simpleSort
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 -- Kategorie Name aus der ID auslesen
