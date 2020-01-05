@@ -28,7 +28,7 @@ set mainCategories to {IDXX:"xx Autoren", ID00:"00 Allgemeines", ID01:"01 Techno
 set catDictionary to current application's NSDictionary's dictionaryWithDictionary:mainCategories
 
 set zettelkastenRecordUUID to "EA459C7B-91B5-4169-B250-C1AD87C92941" -- This is the ID of the Zettelkasten Tinderbox document stored in DevonThink
-
+set dtZettelkastenGroupUUID to "4E773FD4-1314-4F33-ABA9-32E1B6362ABF" -- Zettelkasten Folder in Devon Think
 
 --================================================================================
 --================================================================================
@@ -37,6 +37,30 @@ set zettelkastenRecordUUID to "EA459C7B-91B5-4169-B250-C1AD87C92941" -- This is 
 -- 
 --================================================================================
 --================================================================================
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+-- Check for Selection and Select all Zettel if needed (only when in viewer window)
+-------------------------------------------------------------------------------------------------------------------------------------------------
+tell application id "DNtp"
+	try
+		set thisSelection to the selection
+		if thisSelection is {} then
+			set zettelkastenGroup to get record with uuid dtZettelkastenGroupUUID
+			
+			set theZettelList to children of zettelkastenGroup
+			
+			-- Select all Zettel
+			set frontmostWindow to think window 1
+			set windowClass to (class of frontmostWindow)
+			
+			if windowClass is equal to viewer window then
+				set selection of frontmostWindow to theZettelList
+			end if
+		end if
+	end try
+end tell
+
+set zettelkastenGroup to {}
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 -- Open Zettelkasten
