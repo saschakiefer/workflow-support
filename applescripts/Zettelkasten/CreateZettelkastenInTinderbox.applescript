@@ -507,7 +507,7 @@ to getCategoryNoteNameByTag(theTag)
 	if theTag contains "," then
 		set AppleScript's text item delimiters to ","
 	else
-		set AppleScript's text item delimiters to " "  -- main category
+		set AppleScript's text item delimiters to " " -- main category
 	end if
 	-- set delimiters to delimiter to be used
 	
