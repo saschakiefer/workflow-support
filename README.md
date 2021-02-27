@@ -1,3 +1,3 @@
-# scrivener-workflow
+# workflow-support
 
-All Scrivener Workflow Stuff
+Scripts, that support my workflow
